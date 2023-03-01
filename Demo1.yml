@@ -1,0 +1,330 @@
+  
+          		ser_equipements:
+      -{ue_id: UE0 , msin:   ̍0000000001 ̍ }
+      -{ue_id: UE1 , msin:   ̍0000000002 ̍ } 
+      -{ue_id: UE2 , msin:   ̍0000000003 ̍ }
+	tasks:
+   	 - faill:
+         msg: " ' internet_network_interface ' not found, this parameter is re>
+        when: internet_network_interface == ' '
+   	 - name : enironnement validation !
+
+	     assert:
+        that:
+          - ansible_memtotal_mb >= 1048
+        msg: " minimun memory requirements in the deployement environnement is >
+   	 - name: remove old instalation dir
+      shell : 
+              sudo rm  -rf  {{ BASE_DIR_INSTALL}}
+     -name :  create dir instalation
+      file  : 
+        path : " {{BASE_DIR_INSTALL}}"
+          state : directory
+		 -name : build enB rcc.band7.tm1.nfapi.conf file
+		copy :
+		dest : "{{ BASE_DIR_INSTALL}}/rcc.band7.tm1.nfapi.conf "
+		content : |
+		active_eNBs = ( " computer network and Distributed systems LAB >
+		
+	# Asn1_verbosity, choise in : nome, info, annoying
+
+	Asn1_verbosity = " nome";
+
+
+	eNBs =
+		(
+		{
+		//////// identification parameters:
+		eNB_ID = 0xe00;
+		cell_type = "cell_macro_ENB"; 
+			eNB_name = " computer Netzorks and Distributed systems LA>
+		//tracking area code, 0x0000 and 0xffe are reserved valu>
+		tracking_area_code = 1;
+		plmn_list = ( { mcc = 208; mnc = 93; mnc_length = 2;});
+		tr_s_preference = " local_mac"
+		
+		////////// physical parameters:
+		component_carriers = ( 
+			{
+				node_function     = " 3GPP_eNODEB";
+				node_timing       = " synch_to_ex_device";
+				node_synch_ref    = 0;
+				frame_type                      >
+				tdd_config                   >
+				tdd_config_s             =0;
+				prefix_type             = "NORMA>
+				eutra_band              = 7;
+				downlink_frequency       = 268500>
+				uplink_frequency_offset   = -12000>
+				Nid_cell                 = 0;
+				N_RB_DL                 = 50;
+				Nid_cell_mbsfn                 = 0;
+				nb_antenna_ports         = 1;
+				nb_antennas_tx           = 1;
+				nb_antennas_rx           = 1;
+				tx_gain                  = 90;
+				rx_gain                  = 125;
+				pbch_repertition         = " FALSE>
+				prach_root               = 0;
+				prach_config_index       = 0;
+				prach_high_speed         = " DISAB>
+				prach_zero_correlation    = 1;
+				prach_freq_offset         = 2;
+				pucch_delta_shift         = 1;
+				pucch_nRB_CQI             = 0;
+				pucch_nCS_AN              = 0;
+				pucch_n1_AN               = 0;
+				pdsch_referenceSignalpower               >
+				pdsch_P_b                                >
+				pusch_n_SB                              >
+				pusch_enable64QAM                       >
+				pusch_hoppingMode                     = "in>
+				pusch_hoppingOffset                  = 0;
+				pusch_grouphoppingEnabled               >
+				pusch_groupAssignment                   >
+				pusch_sequencehoppingEnabled            >
+				pusch_nDMRS1                        = 1;
+				phich_duration                     =" NO>
+				phich_resource                     =" ON>
+				srs_enable                         ="DI>
+				/* srs_bandwidthconfig             =;
+				srs_subframeconfig                 =;
+
+		////////// MME parameters:
+		mme_ip_address = ( { ipv4   = " {{ ip_address_EPC >
+					ipv6 = " 192:168:30::17";
+					active = " yes ";
+					preference = " ipv4";
+						}
+							);
+
+
+					enable_measurement_reports = " no ";
+		///x2
+		enable_x2 = " no ";
+		t_reloc_prep = 1000;      /*units: millsecond*/
+		tx2_reloc_overall = 2000;  /*units: millsecond*/
+
+		NETWORK_INTERFACES :
+		{
+			ENB_INTERFACE_NAME_FOR_S1_MME   = " {{ interne>
+			ENB_IPV4_FOR_S1_MME           = " {{ ip_addr>
+			ENB_INTERFACE_NAME_FOR_S1U    = " {{ interne>
+			ENB_IPV4_ADDRESS_FOR_S1U    = " {{ ip_adrr>
+
+			ENB_PORT_FOR_S1U             = 2152;  # Spe>
+			ENB_IPV4_ADDRESS_FOR_X2C      = "{{ ip_addr>
+
+
+
+
+
+
+
+
+
+
+		-name : open5GS-LTE configuration  -hss.yaml
+			copy :
+			dest : "{{ BASE_DIR_INSTALL}}/hss.yaml"
+		content : |
+			db_uri : mongodb://{{ ip_address_MONGO_DB}} : {{ mongo_db_containe>
+		logger :
+			file /open5gs/install/var/log/open5gs/hss.log
+
+
+		hss :
+			freeDiameter : /open5gs/install/etc/freeDiameter/hss.conf
+			parameter:
+		max :
+		pool :
+
+
+
+
+	- name : open5GS-LTE configuration -pcrf.yaml
+		copy :
+		dest : " {{ BASE_DIR_INSTALL}}/pcrf.yaml
+		content : |
+		db_uri: mongodb : // {{ ip_address_MONGO_DB}} : {{ mongo_db_containe>
+		logger : 
+			file : /open5gs/install/var/log/open5gs/pcrf.log
+		pcrf :
+		freeDiameter: /open5gs/install/etc/freeDiameter/pcrf.conf
+		parameter :
+		max:
+		pool:
+
+
+		- name : open5gs-LTE configuration -sgw.yaml
+
+		copy : 
+		dest : "{{ BASE_DIR_INSTALL}}/sgw.yaml"
+		content : |
+		logger :
+		file : /open5gs/install/var/log/open5gs/sgw.log
+	
+		sgw:
+			gtpc :
+			addr : 127.0.0.2
+			gtpu :
+				addr : {{ ip_address_EPC}}
+
+
+
+		parameter :
+		no_ipv6 : true
+		
+		max :
+		pool:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          
+          
+          
+          
+          
+          
+
+
